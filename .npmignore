@@ -1,0 +1,10 @@
+src/
+.editorconfig
+.eslintignore
+.eslintrc.yml
+.prettierrc
+jest.config.ts
+tsconfig.json
+
+!dist/
+
