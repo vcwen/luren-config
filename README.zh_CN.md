@@ -1,10 +1,12 @@
-> This a TypeScript library is to help you create a configuration class that values are injected from environment variables.
+# @lurenjs/config
 
-#### Prerequisites
+> @lurenjs/config 是 TypeScript 的库，主要是用来创建用于配置参数的类，参数的值可以从环境变量中读入。
+
+#### 配置要求
 
 ---
 
-`experimentalDecorators`, `emitDecoratorMetadata` compilation options should be enabled in your `tsconfig.json` file.
+ts 的配置文件`tsconfig.json`中的`experimentalDecorators`, `emitDecoratorMetadata`选项需要被启用。`reflect-metadata`是依赖库（peerDependency），如果未安装的话，也需要同时安装。
 
 ```json
 {
@@ -17,7 +19,7 @@
 }
 ```
 
-#### Installation
+#### 安装
 
 ---
 
@@ -29,12 +31,11 @@
 
 `$ npm i -S @lurenjs/config reflect-metadata`
 
-#### Usage
+#### 使用
 
 ---
 
-The configuration class should be decorator with `Configuration`, each property that you want to inject should be decorated with `InjectEnv`.
-Values will be injected when instance is created.
+配置类上需要添加`Configuration`的注解，需要读入环境变量的参数需要添加`InjectEnv`的注解。当该配置类被实例化时，相应的参数会被注入配置环境变量的值。`validate`和`transform`可以对环境变量的值进行验证和转换。
 
 ```typescript
 @Configuration()
