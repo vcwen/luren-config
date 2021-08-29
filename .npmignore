@@ -5,6 +5,10 @@ src/
 .prettierrc
 jest.config.ts
 tsconfig.json
+tsconfig.build.json
+.history
+.env
+coverage/
 
 !dist/
 
