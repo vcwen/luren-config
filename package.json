@@ -1,8 +1,8 @@
 {
-  "name": "@luren/config",
-  "version": "0.0.1",
+  "name": "@lurenjs/config",
+  "version": "0.0.4",
   "description": "load environment variable for class",
-  "main": "index.js",
+  "main": "dist/index.js",
   "repository": "https://github.com/vcwen/luren-config.git",
   "author": "vincent.wen <wenwei1202@gmail.com>",
   "license": "MIT",
@@ -10,25 +10,27 @@
   "engines": {
     "node": ">=10.0.3"
   },
-  "dependencies": {
-    "dotenv": "^10.0.0",
-    "reflect-metadata": "^0.1.13"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@types/jest": "^27.0.1",
     "@types/node": "^16.6.2",
     "@typescript-eslint/eslint-plugin": "^4.29.2",
     "@typescript-eslint/parser": "^4.29.2",
+    "dotenv": "^10.0.0",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-prettier": "^3.4.0",
     "jest": "^27.0.6",
     "prettier": "^2.3.2",
+    "reflect-metadata": "^0.1.13",
     "ts-jest": "^27.0.5",
     "ts-node": "^10.2.1",
     "typescript": "^4.3.5"
   },
   "scripts": {
     "test": "jest"
+  },
+  "peerDependencies": {
+    "reflect-metadata": "^0.1.13"
   }
 }

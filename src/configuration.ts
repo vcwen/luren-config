@@ -9,14 +9,17 @@ export interface ClassConstructor<T = any> {
 export const Configuration =
   () =>
   (target: ClassConstructor): ClassConstructor => {
-    return class ConfigClass extends target {
-      constructor() {
-        super();
+    const handler = {
+      construct(target: ClassConstructor, args: any[]): any {
+        const instance = new target(...args);
         const props = Reflect.getMetadata(
           CONFIG_METADATA_KEY,
           target.prototype,
         );
-        Object.assign(this, props);
-      }
+        Object.assign(instance, props);
+        return instance;
+      },
     };
+    const ProxyClass = new Proxy(target, handler);
+    return ProxyClass;
   };

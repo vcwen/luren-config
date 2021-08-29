@@ -1,6 +1,7 @@
-import { Configuration } from './configuration';
-import { InvalidEnvError, RequiredEnvError } from './errors';
-import { CONFIG_METADATA_KEY, InjectEnv } from './inject-env';
+import { Configuration } from './';
+import { InvalidEnvError, RequiredEnvError } from './';
+import { InjectEnv } from './';
+import { CONFIG_METADATA_KEY } from './inject-env';
 
 const setEnv = (vals: Record<string, string>) => {
   const keys = Object.keys(vals);
