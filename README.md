@@ -1,4 +1,4 @@
-> This a TypeScript library is to help you create a configuration class that values are injected from environment variables.
+> This a TypeScript library is to help you create a configuration class that values are injected from environment variables or files.
 
 #### Prerequisites
 
@@ -33,6 +33,8 @@
 
 ---
 
+##### Inject config from ENV
+
 The configuration class should be decorator with `Configuration`, each property that you want to inject should be decorated with `InjectEnv`.
 Values will be injected when instance is created.
 
@@ -40,9 +42,8 @@ Values will be injected when instance is created.
 @Configuration()
 class Foo {
   @InjectEnv('HOST', { default: 'localhost' })
-  public host: number;
+  public host: string;
   @InjectEnv('PORT', {
-    validate: (val) => /$\d+$/.test(val),
     transform: (val) => Number.parseInt(val, 10),
   })
   public port: number;
@@ -59,7 +60,95 @@ class Foo {
  **/
 
 const foo = new Foo()
+console.log(foo)
 /**
- * foo: { host: 'localhost', port: 1234, database: 'test' }
+ *  Foo { host: 'localhost', port: 1234, database: 'test' }
+ ** /
+```
+
+**Notice:For env variable injection, Configuration decorator is not required, but then value will be set on the prototype, that means fields won't be listed in Object.keys() or Object.getOwnProperites().**
+
+```
+import { InjectEnv } from './inject-env';
+
+class Foo {
+  @InjectEnv('HOST', { default: 'localhost' })
+  host: string;
+  @InjectEnv('PORT', {
+    transform: (val) => Number(val),
+  })
+  port: number;
+  @InjectEnv('DATABASE', { description: 'database name' })
+  database: string;
+}
+
+const foo = new Foo();
+console.log(foo);
+/* Foo {} */
+
+console.log(foo.host, foo.port, foo.database);
+/* localhost 1234 db_name */
+```
+
+`static` fields can be injected too.
+
+```typescript
+import { InjectEnv } from './inject-env';
+
+class Foo {
+  @InjectEnv('HOST', { default: 'localhost' })
+  static host: string;
+  @InjectEnv('PORT', {
+    transform: (val) => Number(val),
+  })
+  static port: number;
+  @InjectEnv('DATABASE', { description: 'database name' })
+  static database: string;
+}
+
+/**
+ * ENV
+ *
+ * HOST=localhost
+ * PORT=1234
+ * DATABASE= db_name
+ *
+ **/
+
+console.log(Foo)
+/**
+ * [class Foo] { host: 'localhost', port: 1234, database: 'db_name' }
+ ** /
+```
+
+Config source can be an file, `json` and `yaml` format is supported, `yaml` is the default format. Then base filepath `cwd(current work directory)`.
+
+```typescript
+
+ @Configuration({ filepath: './test/config.yml' })
+    class Bar {
+      @InjectProp()
+      zee: number;
+
+      @InjectProp()
+      foo: string;
+
+      @InjectProp({ transform: (val) => Number(val) })
+      ordinal: number;
+    }
+    const bar = new Bar();
+
+/**
+ * ./test/config.yml
+ *
+ * foo: bar
+ * ordinal: "1"
+ * zee: 1
+ *
+ **/
+
+const bar = new Bar()
+/**
+ * Bar { zee: 1, foo: 'bar', ordinal: 1 }
  ** /
 ```

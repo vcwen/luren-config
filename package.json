@@ -9,6 +9,7 @@
   "engines": {
     "node": ">=10.0.3"
   },
+  "types": "./dist/index.d.ts",
   "dependencies": {
     "yaml": "^2.1.3"
   },
@@ -29,7 +30,8 @@
     "typescript": "^4.9.3"
   },
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "build": "rm -rf dist/ && tsc -p tsconfig.build.json"
   },
   "peerDependencies": {
     "reflect-metadata": "^0.1.13"

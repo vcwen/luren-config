@@ -9,6 +9,9 @@ tsconfig.build.json
 .history
 .env
 coverage/
-
 !dist/
+node_modules/
+*.md
+.yarn/
+test/
 
