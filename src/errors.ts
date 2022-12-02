@@ -1,25 +1,16 @@
-export class EnvError extends Error {
-  public envName: string;
-  constructor(envName: string, message: string) {
+export class EnvException extends Error {
+  constructor(message: string) {
     super(message);
-    this.name = EnvError.name;
-    this.envName = envName;
+    this.name = EnvException.name;
   }
 }
 
-export class RequiredEnvError extends EnvError {
-  constructor(envName: string) {
-    super(envName, `${envName} is required`);
+export class GetPropValueException extends Error {
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+  constructor(public valueName: string, public value: any, message?: string) {
+    super(message);
   }
 }
 
-export class InvalidEnvError extends EnvError {
-  constructor(envName: string, value: string, reason?: string) {
-    super(
-      envName,
-      `Value '${value}' is invalid for ${envName}.${
-        reason ? ` Reason: ${reason}` : ''
-      } `,
-    );
-  }
-}
+export class InvalidPropValueException extends GetPropValueException {}
+export class RequiredPropValueException extends GetPropValueException {}

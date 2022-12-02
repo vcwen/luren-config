@@ -1,7 +1,6 @@
-import { Configuration } from './';
-import { InvalidEnvError, RequiredEnvError } from './';
-import { InjectEnv } from './';
-import { CONFIG_METADATA_KEY } from './inject-env';
+import { Configuration, InjectProp } from '../src';
+import { InjectEnv } from '../src';
+import { EnvException } from '../src/errors';
 
 const setEnv = (vals: Record<string, string>) => {
   const keys = Object.keys(vals);
@@ -17,15 +16,13 @@ describe('InjectEnv', () => {
   it('should set the metadata', () => {
     const env = { NAME: 'vc' };
     setEnv(env);
-    @Configuration()
     class Foo {
       @InjectEnv('NAME')
-      @InjectEnv('NAME', { transform: (val) => Number.parseInt(val, 10) })
       public name!: string;
     }
-    const metadata = Reflect.getMetadata(CONFIG_METADATA_KEY, Foo.prototype);
+    const foo = new Foo();
     unsetEnv(env);
-    expect(metadata).toEqual({ name: 'vc' });
+    expect(foo.name).toBe('vc');
   });
   it('should throw error if env is required', () => {
     expect(() => {
@@ -34,7 +31,7 @@ describe('InjectEnv', () => {
         @InjectEnv('NAME')
         public name: string;
       }
-    }).toThrowError(RequiredEnvError);
+    }).toThrowError(EnvException);
   });
   it("should allow env not set if it' not required", () => {
     @Configuration()
@@ -42,8 +39,8 @@ describe('InjectEnv', () => {
       @InjectEnv('NAME', { required: false })
       public name: string;
     }
-    const metadata = Reflect.getMetadata(CONFIG_METADATA_KEY, Foo.prototype);
-    expect(metadata).toBeUndefined();
+    const foo = new Foo();
+    expect(foo.name).toBeUndefined();
   });
   it('should use default value if env is not set ', () => {
     @Configuration()
@@ -51,31 +48,31 @@ describe('InjectEnv', () => {
       @InjectEnv('NAME', { default: 'foo' })
       public name: string;
     }
-    const metadata = Reflect.getMetadata(CONFIG_METADATA_KEY, Foo.prototype);
-    expect(metadata).toEqual({ name: 'foo' });
+    const foo = new Foo();
+    expect(foo).toEqual({ name: 'foo' });
   });
   it('should validate the value', () => {
     const env = { PORT: '1234', BAR_PORT: 'bar' };
     setEnv(env);
     @Configuration()
     class Foo {
-      @InjectEnv('PORT', { validate: (val) => /\d+/.test(val) })
+      @InjectEnv('PORT', { validate: (val: string) => /\d+/.test(val) })
       public port: string;
     }
-    const metadata = Reflect.getMetadata(CONFIG_METADATA_KEY, Foo.prototype);
-    expect(metadata).toEqual({ port: '1234' });
+    const foo = new Foo();
+    expect(foo).toEqual({ port: '1234' });
 
     expect(() => {
       class Bar {
-        @InjectEnv('BAR_PORT', { validate: (val) => /$\d+$/.test(val) })
+        @InjectEnv('BAR_PORT', { validate: (val: string) => /$\d+$/.test(val) })
         public port: number;
       }
-    }).toThrowError(InvalidEnvError);
+    }).toThrowError(EnvException);
     expect(() => {
       class Bar {
         @InjectEnv('BAR_PORT', {
-          validate: (val) => {
-            if (/\d+/.test(val)) {
+          validate: (val: number) => {
+            if (Number.isInteger(val)) {
               return true;
             } else {
               throw new Error(`PORT must be an number`);
@@ -84,7 +81,7 @@ describe('InjectEnv', () => {
         })
         public port: number;
       }
-    }).toThrowError(/PORT must be an number/);
+    }).toThrowError();
     unsetEnv(env);
   });
 
@@ -94,8 +91,8 @@ describe('InjectEnv', () => {
     @Configuration()
     class Foo {
       @InjectEnv('PORT', {
-        validate: (val) => /\d+/.test(val),
-        transform: (val) => Number.parseInt(val, 10),
+        validate: (val) => Number.isInteger(val),
+        transform: (val: string) => Number(val),
       })
       public port: number;
       @InjectEnv('NAME')
@@ -106,28 +103,53 @@ describe('InjectEnv', () => {
     unsetEnv(env);
     expect(foo).toEqual({ port: 1234, name: 'foo' });
   });
-});
 
-describe('Configuration', () => {
-  it('should inherit values from parent', () => {
+  it('should set static value', () => {
     const env = { NAME: 'foo', PORT: '1234' };
     setEnv(env);
+    @Configuration()
     class Foo {
+      @InjectEnv('PORT', {
+        validate: (val) => Number.isInteger(val),
+        transform: (val: string) => Number(val),
+      })
+      public static port: number;
       @InjectEnv('NAME')
       public name: string;
     }
 
-    @Configuration()
-    class Bar extends Foo {
-      @InjectEnv('PORT', {
-        validate: (val) => /\d+/.test(val),
-        transform: (val) => Number.parseInt(val, 10),
-      })
-      public port: number;
+    unsetEnv(env);
+    expect(Foo.port).toEqual(1234);
+  });
+});
+
+describe('Configuration', () => {
+  it('should get values from file', () => {
+    @Configuration({ filepath: './test/config.json', format: 'json' })
+    class Foo {
+      @InjectProp()
+      public foo: string;
+      @InjectProp()
+      public zee: number;
+    }
+
+    const foo = new Foo();
+    expect(foo).toEqual({ foo: 'bar', zee: 1 });
+
+    @Configuration({ filepath: './test/config.yml' })
+    class Bar {
+      @InjectProp()
+      zee: number;
+
+      @InjectProp()
+      foo: string;
+
+      @InjectProp({ transform: (val) => Number(val) })
+      ordinal: number;
     }
 
     const bar = new Bar();
-    unsetEnv(env);
-    expect(bar).toEqual({ port: 1234, name: 'foo' });
+
+    expect(bar).toEqual({ foo: 'bar', ordinal: 1, zee: 1 });
   });
 });

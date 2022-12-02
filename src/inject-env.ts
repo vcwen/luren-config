@@ -1,16 +1,13 @@
-import { InvalidEnvError, RequiredEnvError } from './errors';
+import {
+  EnvException,
+  InvalidPropValueException,
+  RequiredPropValueException,
+} from './errors';
+import { getPropValue, GetPropValueOptions } from './get-prop-value';
+import { ConfigurableProp } from './inject-prop';
+import { METADATA_KEY_CONFIGURABLE_PROPS } from './metadata-key';
+import 'reflect-metadata';
 
-export const CONFIG_METADATA_KEY = Symbol('config');
-
-const isNil = (val: unknown): boolean => val == null;
-
-export interface InjectEnvOptions<T = unknown> {
-  validate?: (val: string) => boolean;
-  transform?: (val: string) => T;
-  required?: boolean;
-  default?: T;
-  description?: string;
-}
 /**
  *
  * @param {string} name - name of the environment variable
@@ -23,42 +20,43 @@ export interface InjectEnvOptions<T = unknown> {
  */
 export const InjectEnv = <T>(
   name: string,
-  options?: InjectEnvOptions<T>,
+  options?: Exclude<GetPropValueOptions<T>, 'dataType'>,
 ): PropertyDecorator => {
-  const required =
-    options?.required === false || !isNil(options?.default) ? false : true;
   return (target, prop): void => {
-    const env = Reflect.get(process.env, name);
-    let val: T | undefined;
-    if (isNil(env)) {
-      val = options?.default;
-      if (isNil(val) && required) {
-        throw new RequiredEnvError(name);
-      }
-    } else {
-      if (options?.validate) {
-        try {
-          const valid = options.validate(env);
-          if (!valid) {
-            throw new InvalidEnvError(name, env);
-          }
-        } catch (err) {
-          throw new InvalidEnvError(name, env, err?.message);
-        }
-      }
-      if (options?.transform) {
-        val = options.transform(env);
-      } else {
-        val = env;
-      }
-    }
-    const props = Reflect.getMetadata(CONFIG_METADATA_KEY, target) ?? {};
-    if (!isNil(val)) {
+    const dataType = Reflect.getOwnMetadata('design:type', target, prop);
+    try {
+      const val = getPropValue(process.env, name, { ...options, dataType });
+      Object.defineProperty(target, prop, {
+        value: val,
+        writable: false,
+        enumerable: true,
+      });
+
+      const processor = (): T | undefined =>
+        getPropValue(process.env, name, { ...options, dataType });
+      const configurableProp: ConfigurableProp = {
+        dataType,
+        processor,
+      };
+      const props: { [key: string]: ConfigurableProp } =
+        Reflect.getMetadata(METADATA_KEY_CONFIGURABLE_PROPS, target) ?? {};
       Reflect.defineMetadata(
-        CONFIG_METADATA_KEY,
-        { ...props, [prop]: val },
+        METADATA_KEY_CONFIGURABLE_PROPS,
+        { ...props, [prop]: configurableProp },
         target,
       );
+    } catch (err) {
+      if (err instanceof RequiredPropValueException) {
+        throw new EnvException(`env ${err.valueName} is required`);
+      } else if (err instanceof InvalidPropValueException) {
+        throw new EnvException(
+          `env ${err.valueName} has the invalid value:${err.value}${
+            err.message ? `, reason:${err.message}` : ''
+          }`,
+        );
+      } else {
+        throw err;
+      }
     }
   };
 };
