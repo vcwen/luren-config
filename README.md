@@ -36,6 +36,8 @@
 The configuration class should be decorator with `Configuration`, each property that you want to inject should be decorated with `InjectEnv`.
 Values will be injected when instance is created.
 
+Set env `SKIP_UNSET_ENV` if you want to skip some required environment variables.
+
 ```typescript
 @Configuration()
 class Foo {

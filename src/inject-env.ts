@@ -1,9 +1,8 @@
 import { InvalidEnvError, RequiredEnvError } from './errors';
 
 export const CONFIG_METADATA_KEY = Symbol('config');
-export const SKIP_INJECT_ENV = 'SKIP_INJECT_ENV'
-const skipInjectEnv = (): boolean => !!process.env[SKIP_INJECT_ENV]
-
+export const SKIP_UNSET_ENV = 'SKIP_UNSET_ENV';
+const skipUnsetEnv = (): boolean => !!process.env[SKIP_UNSET_ENV];
 
 const isNil = (val: unknown): boolean => val == null;
 
@@ -28,18 +27,14 @@ export const InjectEnv = <T>(
   name: string,
   options?: InjectEnvOptions<T>,
 ): PropertyDecorator => {
-
   const required =
     options?.required === false || !isNil(options?.default) ? false : true;
   return (target, prop): void => {
-    if(skipInjectEnv()) {
-      return
-    }
     const env = Reflect.get(process.env, name);
     let val: T | undefined;
     if (!env) {
       val = options?.default;
-      if (isNil(val) && required) {
+      if (isNil(val) && required && !skipUnsetEnv()) {
         throw new RequiredEnvError(name);
       }
     } else {
