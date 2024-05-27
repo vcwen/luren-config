@@ -1,7 +1,7 @@
 import { Configuration } from './';
 import { InvalidEnvError, RequiredEnvError } from './';
 import { InjectEnv } from './';
-import { CONFIG_METADATA_KEY } from './inject-env';
+import { CONFIG_METADATA_KEY, SKIP_INJECT_ENV } from './inject-env';
 
 const setEnv = (vals: Record<string, string>) => {
   const keys = Object.keys(vals);
@@ -34,9 +34,21 @@ describe('InjectEnv', () => {
         @InjectEnv('NAME')
         public name: string;
       }
-    }).toThrowError(RequiredEnvError);
+    }).toThrow(RequiredEnvError);
   });
-  it("should allow env not set if it' not required", () => {
+
+  it('should skip if SKIP_INJECT_ENV is set', () => {
+    expect(() => {
+      setEnv({ SKIP_INJECT_ENV: '1' });
+      @Configuration()
+      class Foo {
+        @InjectEnv('NAME')
+        public name: string;
+      }
+      unsetEnv({ SKIP_INJECT_ENV: '1' });
+    }).not.toThrow(RequiredEnvError);
+  });
+  it("should allow env not set if it's not required", () => {
     @Configuration()
     class Foo {
       @InjectEnv('NAME', { required: false })

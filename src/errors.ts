@@ -17,8 +17,7 @@ export class InvalidEnvError extends EnvError {
   constructor(envName: string, value: string, reason?: string) {
     super(
       envName,
-      `Value '${value}' is invalid for ${envName}.${
-        reason ? ` Reason: ${reason}` : ''
+      `Value '${value}' is invalid for ${envName}.${reason ? ` Reason: ${reason}` : ''
       } `,
     );
   }
