@@ -1,6 +1,6 @@
 {
   "name": "@lurenjs/config",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "load environment variable for class",
   "main": "dist/index.js",
   "repository": "https://github.com/vcwen/luren-config.git",
