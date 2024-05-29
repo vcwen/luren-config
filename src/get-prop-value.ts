@@ -18,8 +18,7 @@ export const getPropValue = <T>(
   name: string,
   options?: GetPropValueOptions<T>,
 ): T | undefined => {
-  const required =
-    options?.required === false || !isNil(options?.default) ? false : true;
+  const required = options?.required !== false;
   const originalVal = Reflect.get(dataSource, name);
   let val: T | undefined;
   if (isNil(originalVal)) {

@@ -1,9 +1,9 @@
-import { getPropValue, GetPropValueOptions } from './get-prop-value';
+import { getPropValue, type GetPropValueOptions } from './get-prop-value';
 import { METADATA_KEY_CONFIGURABLE_PROPS } from './metadata-key';
 
 export interface ConfigurableProp {
   // eslint-disable-next-line @typescript-eslint/ban-types
-  dataType: string | Function;
+    dataType: string | Function;
   processor: (data?: any) => any;
 }
 

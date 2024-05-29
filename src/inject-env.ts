@@ -3,10 +3,15 @@ import {
   InvalidPropValueException,
   RequiredPropValueException,
 } from './errors';
-import { getPropValue, GetPropValueOptions } from './get-prop-value';
-import { ConfigurableProp } from './inject-prop';
+import { getPropValue, type GetPropValueOptions } from './get-prop-value';
+import type { ConfigurableProp } from './inject-prop';
 import { METADATA_KEY_CONFIGURABLE_PROPS } from './metadata-key';
 import 'reflect-metadata';
+
+const SKIP_UNSET_ENV = 'SKIP_UNSET_ENV';
+const skipUnsetEnv = (): boolean => {
+  return !!process.env[SKIP_UNSET_ENV];
+};
 
 /**
  *
@@ -47,16 +52,19 @@ export const InjectEnv = <T>(
       );
     } catch (err) {
       if (err instanceof RequiredPropValueException) {
+        if (skipUnsetEnv()) {
+          return;
+        }
         throw new EnvException(`env ${err.valueName} is required`);
-      } else if (err instanceof InvalidPropValueException) {
+      }
+      if (err instanceof InvalidPropValueException) {
         throw new EnvException(
           `env ${err.valueName} has the invalid value:${err.value}${
             err.message ? `, reason:${err.message}` : ''
           }`,
         );
-      } else {
-        throw err;
       }
+      throw err;
     }
   };
 };

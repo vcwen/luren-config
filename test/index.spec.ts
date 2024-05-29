@@ -29,9 +29,23 @@ describe('InjectEnv', () => {
       @Configuration()
       class Foo {
         @InjectEnv('NAME')
-        public name: string;
+        name: string;
       }
-    }).toThrowError(EnvException);
+      const foo = new Foo();
+    }).toThrow(EnvException);
+  });
+  it('should not throw error if unset required env is allowed', () => {
+    expect(() => {
+      const env = { SKIP_UNSET_ENV: '1' };
+      setEnv(env);
+      @Configuration()
+      class Foo {
+        @InjectEnv('NAME')
+        name: string;
+      }
+      const foo = new Foo();
+      unsetEnv(env);
+    }).not.toThrow(Error);
   });
   it("should allow env not set if it' not required", () => {
     @Configuration()
@@ -67,21 +81,20 @@ describe('InjectEnv', () => {
         @InjectEnv('BAR_PORT', { validate: (val: string) => /$\d+$/.test(val) })
         public port: number;
       }
-    }).toThrowError(EnvException);
+    }).toThrow(EnvException);
     expect(() => {
       class Bar {
         @InjectEnv('BAR_PORT', {
           validate: (val: number) => {
             if (Number.isInteger(val)) {
               return true;
-            } else {
-              throw new Error(`PORT must be an number`);
             }
+            throw new Error('PORT must be an number');
           },
         })
         public port: number;
       }
-    }).toThrowError();
+    }).toThrow(Error);
     unsetEnv(env);
   });
 
